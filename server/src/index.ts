@@ -1,14 +1,38 @@
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
 const { addMocksToSchema } = require("@graphql-tools/mock");
-const {makeExecutableSchema} = require("graphql-tools/schema");
-const schema = require("./schema");
+const { makeExecutableSchema } = require("@graphql-tools/schema");
+const typeDefinitions = require("./schema");
 
-// Demarrer le serveur
+const mocks = {
+  Query: () => ({
+    tracksForHome: () => [...new Array(6)],
+  }),
+  Track: () => ({
+    id: () => "track_01",
+    title: () => "Astro Kitty, Space Explorer",
+    author: () => {
+      return {
+        name: "Grumpy Cat",
+        photo:
+          "https://res.cloudinary.com/dety84pbu/image/upload/v1606816219/kitty-veyron-sm_mctf3c.jpg",
+      };
+    },
+    thumbnail: () =>
+      "https://res.cloudinary.com/dety84pbu/image/upload/v1598465568/nebula_cat_djkt9r.jpg",
+    length: () => 1210,
+    modulesCount: () => 6,
+  }),
+};
+
 async function startApolloServer() {
-  // create a new ApolloServer instance, passing the schema def
-  const server = new ApolloServer({ typeDefs: schema });
-  // start the server
+  const server = new ApolloServer({
+    schema: addMocksToSchema({
+      schema: makeExecutableSchema({ typeDefs: typeDefinitions }),
+      mocks,
+    }),
+  });
+
   const { url } = await startStandaloneServer(server);
   console.log(`
       👑  Server is running !
@@ -17,9 +41,3 @@ async function startApolloServer() {
 }
 
 startApolloServer();
-
-/*
-ce script crée un serveur GraphQL qui utilise le schéma défini, puis démarre le serveur. 
-Une fois que le serveur est opérationnel => affiche message  
-et fournit l'URL à laquelle vous pouvez envoyer des requêtes GraphQL
-*/
